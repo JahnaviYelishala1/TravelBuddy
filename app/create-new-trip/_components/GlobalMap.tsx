@@ -9,7 +9,8 @@ import { Activity, Itinerary } from "./ChatBox";
 function GlobalMap() {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  //@ts-ignore
+
+  // @ts-ignore
   const { tripDetailInfo } = useTripDetail();
 
   useEffect(() => {
@@ -25,30 +26,35 @@ function GlobalMap() {
       });
     }
 
-    if (mapRef.current) {
-      const markers: mapboxgl.Marker[] = [];
+    const markers: mapboxgl.Marker[] = [];
 
-      tripDetailInfo?.itinerary.forEach((itinerary: Itinerary) => {
-        itinerary.activities.forEach((activity: Activity) => {
-          if (activity?.geo_coordinates?.latitude && activity?.geo_coordinates?.longitude) {
-            const newMarker = new mapboxgl.Marker({ color: "red" })
-              .setLngLat([activity.geo_coordinates.longitude, activity.geo_coordinates.latitude])
-              .setPopup(
-                new mapboxgl.Popup({ offset: 25 }).setText(activity.place_name)
-              )
-              .addTo(mapRef.current!);
-            markers.push(newMarker);
-          }
-        });
+    tripDetailInfo?.itinerary?.forEach((itinerary: Itinerary) => {
+      itinerary.activities?.forEach((activity: Activity) => {
+        if (
+          activity?.geo_coordinates?.latitude &&
+          activity?.geo_coordinates?.longitude &&
+          mapRef.current
+        ) {
+          const newMarker = new mapboxgl.Marker({ color: "red" })
+            .setLngLat([
+              activity.geo_coordinates.longitude,
+              activity.geo_coordinates.latitude,
+            ])
+            .setPopup(
+              new mapboxgl.Popup({ offset: 25 }).setText(activity.place_name)
+            )
+            .addTo(mapRef.current);
+
+          markers.push(newMarker);
+        }
       });
+    });
 
-      // Cleanup
-      return () => {
-        markers.forEach((m) => m.remove());
-        mapRef.current?.remove();
-        mapRef.current = null;
-      };
-    }
+    return () => {
+      markers.forEach((m) => m.remove());
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
   }, [tripDetailInfo]);
 
   return (
