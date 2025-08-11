@@ -1,10 +1,12 @@
 "use client";
+
 import React, {
   useEffect,
   useRef,
   useState,
   createContext,
   useContext,
+  ReactNode,
 } from "react";
 import {
   IconArrowNarrowLeft,
@@ -13,11 +15,12 @@ import {
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "motion/react";
-import Image, { ImageProps } from "next/image";
 import { useOutsideClick } from "@/hooks/use-outside-click";
+import type { ImageProps } from "next/image";
 
+// ✅ Use ReactNode[] instead of JSX.Element[]
 interface CarouselProps {
-  items: JSX.Element[];
+  items: ReactNode[];
   initialScroll?: number;
 }
 
@@ -25,7 +28,7 @@ type Card = {
   src: string;
   title: string;
   category: string;
-  content: React.ReactNode;
+  content: ReactNode;
 };
 
 export const CarouselContext = createContext<{
@@ -37,9 +40,9 @@ export const CarouselContext = createContext<{
 });
 
 export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
-  const carouselRef = React.useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = React.useState(false);
-  const [canScrollRight, setCanScrollRight] = React.useState(true);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -58,20 +61,16 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
   };
 
   const scrollLeft = () => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: -300, behavior: "smooth" });
-    }
+    carouselRef.current?.scrollBy({ left: -300, behavior: "smooth" });
   };
 
   const scrollRight = () => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: 300, behavior: "smooth" });
-    }
+    carouselRef.current?.scrollBy({ left: 300, behavior: "smooth" });
   };
 
   const handleCardClose = (index: number) => {
     if (carouselRef.current) {
-      const cardWidth = isMobile() ? 230 : 384; // (md:w-96)
+      const cardWidth = isMobile() ? 230 : 384;
       const gap = isMobile() ? 4 : 8;
       const scrollPosition = (cardWidth + gap) * (index + 1);
       carouselRef.current.scrollTo({
@@ -82,9 +81,7 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
     }
   };
 
-  const isMobile = () => {
-    return window && window.innerWidth < 768;
-  };
+  const isMobile = () => typeof window !== "undefined" && window.innerWidth < 768;
 
   return (
     <CarouselContext.Provider
@@ -96,24 +93,16 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
           ref={carouselRef}
           onScroll={checkScrollability}
         >
-          <div
-            className={cn(
-              "absolute right-0 z-[1000] h-auto w-[5%] overflow-hidden bg-gradient-to-l",
-            )}
-          ></div>
-
+          <div className="absolute right-0 z-[1000] h-auto w-[5%] overflow-hidden bg-gradient-to-l" />
           <div
             className={cn(
               "flex flex-row justify-start gap-4 pl-4",
-              "mx-auto max-w-7xl", // remove max-w-4xl if you want the carousel to span the full width of its container
+              "mx-auto max-w-7xl"
             )}
           >
             {items.map((item, index) => (
               <motion.div
-                initial={{
-                  opacity: 0,
-                  y: 20,
-                }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{
                   opacity: 1,
                   y: 0,
@@ -121,10 +110,9 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
                     duration: 0.5,
                     delay: 0.2 * index,
                     ease: "easeOut",
-                    once: true,
                   },
                 }}
-                key={"card" + index}
+                key={`card-${index}`}
                 className="rounded-3xl last:pr-[5%] md:last:pr-[33%]"
               >
                 {item}
@@ -164,20 +152,16 @@ export const Card = ({
 }) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { onCardClose, currentIndex } = useContext(CarouselContext);
+  const { onCardClose } = useContext(CarouselContext);
 
   useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
+    const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         handleClose();
       }
-    }
+    };
 
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
+    document.body.style.overflow = open ? "hidden" : "auto";
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -185,10 +169,7 @@ export const Card = ({
 
   useOutsideClick(containerRef, () => handleClose());
 
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
+  const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
     onCardClose(index);
@@ -236,6 +217,7 @@ export const Card = ({
           </div>
         )}
       </AnimatePresence>
+
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
@@ -276,12 +258,13 @@ export const BlurImage = ({
   ...rest
 }: ImageProps) => {
   const [isLoading, setLoading] = useState(true);
+
   return (
     <img
       className={cn(
         "h-full w-full transition duration-300",
         isLoading ? "blur-sm" : "blur-0",
-        className,
+        className
       )}
       onLoad={() => setLoading(false)}
       src={src as string}
@@ -289,8 +272,7 @@ export const BlurImage = ({
       height={height}
       loading="lazy"
       decoding="async"
-      blurDataURL={typeof src === "string" ? src : undefined}
-      alt={alt ? alt : "Background of a beautiful view"}
+      alt={alt || "Background of a beautiful view"}
       {...rest}
     />
   );
