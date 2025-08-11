@@ -7,73 +7,56 @@ import { useTripDetail } from "@/app/provider";
 import { Activity, Itinerary } from "./ChatBox";
 
 function GlobalMap() {
+  // Allow null in ref, then cast later where needed
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
 
   // @ts-ignore
   const { tripDetailInfo } = useTripDetail();
 
-  // Create the map only once
   useEffect(() => {
     mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY || "";
 
+    // Initialize map only once
     if (!mapRef.current && mapContainerRef.current) {
-      const map = new mapboxgl.Map({
+      mapRef.current = new mapboxgl.Map({
         container: mapContainerRef.current,
-        style: "mapbox://styles/mapbox/satellite-streets-v12",
-        center: [0, 0],
+        style: "mapbox://styles/mapbox/streets-v12",
+        center: [-74.5, 40],
         zoom: 1.7,
         projection: "globe",
       });
-
-      map.on("style.load", () => {
-        map.setFog({}); // Adds atmospheric effect
-      });
-
-      mapRef.current = map;
     }
-  }, []);
 
-  // Update markers when tripDetailInfo changes
-  useEffect(() => {
-    if (!mapRef.current) return;
-
-    // Remove old markers
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current = [];
-
-    const bounds = new mapboxgl.LngLatBounds();
-    let hasMarkers = false;
+    // Remove old markers before adding new ones
+    const markers: mapboxgl.Marker[] = [];
 
     tripDetailInfo?.itinerary?.forEach((itinerary: Itinerary) => {
       itinerary.activities?.forEach((activity: Activity) => {
         if (
           activity?.geo_coordinates?.latitude &&
-          activity?.geo_coordinates?.longitude
+          activity?.geo_coordinates?.longitude &&
+          mapRef.current
         ) {
-          hasMarkers = true;
-          const lng = activity.geo_coordinates.longitude;
-          const lat = activity.geo_coordinates.latitude;
-
-          bounds.extend([lng, lat]);
-
           const newMarker = new mapboxgl.Marker({ color: "red" })
-            .setLngLat([lng, lat])
+            .setLngLat([
+              activity.geo_coordinates.longitude,
+              activity.geo_coordinates.latitude,
+            ])
             .setPopup(
               new mapboxgl.Popup({ offset: 25 }).setText(activity.place_name)
             )
-            .addTo(mapRef.current!);
+            .addTo(mapRef.current);
 
-          markersRef.current.push(newMarker);
+          markers.push(newMarker);
         }
       });
     });
 
-    // Adjust view to fit markers
-    if (hasMarkers) {
-      mapRef.current.fitBounds(bounds, { padding: 50 });
-    }
+    // Cleanup only markers, not the whole map
+    return () => {
+      markers.forEach((m) => m.remove());
+    };
   }, [tripDetailInfo]);
 
   return (
