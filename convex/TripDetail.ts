@@ -5,11 +5,12 @@ import { v } from "convex/values";
 export const CreateTripDetail = mutation({
   args: {
     tripId: v.string(),
-    uid: v.id("UserTable"), // Convex's generated ID
+    uid: v.id("UserTable"),
     tripDetail: v.any()
   },
   handler: async (ctx, args) => {
     try {
+      console.log("Incoming args:", args);
       const _id = await ctx.db.insert("TripDetailTable", {
         tripId: args.tripId,
         tripDetail: args.tripDetail,
@@ -18,10 +19,11 @@ export const CreateTripDetail = mutation({
       return { _id };
     } catch (err) {
       console.error("CreateTripDetail error:", err);
-      throw new Error("Failed to create trip detail. Check uid and trip data.");
+      throw new Error("Failed to create trip detail. See logs for details.");
     }
   }
 });
+
 
 // ✅ Get all trips for a user
 export const GetUserTrips = query({
