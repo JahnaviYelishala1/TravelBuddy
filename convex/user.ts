@@ -1,4 +1,3 @@
-// convex/user.ts
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 
@@ -9,20 +8,24 @@ export const CreateNewUser = mutation({
     imageUrl: v.string(),
   },
   handler: async (ctx, args) => {
-    const user = await ctx.db
+    // Check if user already exists by email
+    const existing = await ctx.db
       .query("UserTable")
       .filter((q) => q.eq(q.field("email"), args.email))
       .collect();
 
-    if (user.length === 0) {
-      const userData = {
-        name: args.name,
-        email: args.email,
-        imageUrl: args.imageUrl,
-      };
-      await ctx.db.insert("UserTable", userData);
-      return userData;
+    if (existing.length > 0) {
+      return existing[0]; // Already exists
     }
-    return user[0];
+
+    // Create new user
+    const _id = await ctx.db.insert("UserTable", {
+      name: args.name,
+      email: args.email,
+      imageUrl: args.imageUrl
+    });
+
+    // Return full user object
+    return { _id, ...args };
   },
 });

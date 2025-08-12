@@ -7,6 +7,7 @@ import { useUser } from "@clerk/nextjs";
 import { UserDetailContext } from "@/context/UserDetailContext";
 import { TripContextType, TripDetailContext } from "@/context/TripDetailContext";
 import { TripInfo } from "./create-new-trip/_components/ChatBox";
+import Footer from "./_components/Footer";
 
 
 function Provider({
@@ -43,6 +44,7 @@ function Provider({
       <div>
         <Header />
         {children}
+        <Footer />
       </div>
       </TripDetailContext.Provider>
     </UserDetailContext.Provider>
