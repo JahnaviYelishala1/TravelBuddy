@@ -6,6 +6,7 @@ import { useUser } from '@clerk/nextjs'
 import { ArrowDown, Globe2, Send } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React from 'react'
+import Footer from './Footer'
 
 export const suggestions = [
     {
@@ -78,7 +79,7 @@ function Hero() {
                         thumbnailAlt="Dummy Video Thumbnail"
                     />    </div>
             </div>
-
+            <Footer />
 
         </div>
     )

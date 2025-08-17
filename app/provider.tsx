@@ -44,7 +44,6 @@ function Provider({
       <div>
         <Header />
         {children}
-        <Footer />
       </div>
       </TripDetailContext.Provider>
     </UserDetailContext.Provider>
