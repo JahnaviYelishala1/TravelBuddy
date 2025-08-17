@@ -79,7 +79,6 @@ function Hero() {
                         thumbnailAlt="Dummy Video Thumbnail"
                     />    </div>
             </div>
-            <Footer />
 
         </div>
     )
